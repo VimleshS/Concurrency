@@ -7,11 +7,28 @@ import (
 )
 
 func main() {
-	c := boring("Vimlesh")
+	//c := boring("Vimlesh")
+	c := fanIn(boring("Ann"), boring("Joe"))
 	for i := 0; i <= 5; i++ {
 		fmt.Println(<-c)
 	}
 	fmt.Println("Exiting......")
+}
+
+//https://talks.golang.org/2012/concurrency.slide#28
+func fanIn(input1, input2 <-chan string) <-chan string {
+	c := make(chan string)
+	go func() {
+		for {
+			c <- <-input1
+		}
+	}()
+	go func() {
+		for {
+			c <- <-input2
+		}
+	}()
+	return c
 }
 
 //Generator: function that returns a channel
