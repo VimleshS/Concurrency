@@ -11,19 +11,29 @@ type Message struct {
 	wait chan bool
 }
 
-func main() {
-	c := fanIn(boring("Ann"), boring("Joe"))
-	for i := 0; i < 10; i++ {
-		msg1 := <-c
-		fmt.Println(msg1.msg)
-		msg2 := <-c
-		fmt.Println(msg2.msg)
+func f(left, right chan int) {
+	fmt.Printf("%p   %p", left, right)
+	fmt.Println()
+	left <- 1 + <-right
+}
 
-		//its value can be anything.. just a trigger point
-		msg1.wait <- true
-		msg2.wait <- true
+func main() {
+	const n = 10
+	leftmost := make(chan int)
+	right := leftmost
+	left := leftmost
+	for i := 0; i < n; i++ {
+		right = make(chan int)
+		go f(left, right)
+		left = right
 	}
-	fmt.Println("Exiting......")
+
+	go func(c chan int) {
+		c <- 1
+	}(right)
+
+	fmt.Println(<-leftmost)
+	fmt.Printf("%p   %p   %p", left, right, leftmost)
 }
 
 //https://talks.golang.org/2012/concurrency.slide#28
